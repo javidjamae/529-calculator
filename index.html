@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The 529 Question: Should that money go in a 529?</title>
+<meta name="description" content="A free, open-source calculator comparing a 529 plan against a taxable brokerage account, using a real age-based glide path, qualified-spending certainty, and federal and state tax.">
+<meta property="og:title" content="The 529 Question: Should that money go in a 529?">
+<meta property="og:description" content="Compare a 529 against a taxable account with a real age-based glide path. Free and open source.">
+<meta property="og:type" content="website">
+</head>
+<body>
+<style>
+:root{
+  --ground:#F2F4F7; --surface:#FFFFFF; --surface-2:#F8F9FB;
+  --ink:#131A24; --ink-2:#3C4756; --muted:#6B7686; --line:#DDE2EA;
+  --accent:#7B2D26; --accent-soft:#F3E7E5;
+  --win-529:#0B6E4F; --win-tax:#1D4E89;
+  --shadow:0 1px 2px rgba(19,26,36,.05),0 8px 24px -12px rgba(19,26,36,.18);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1318; --surface:#161D25; --surface-2:#1C242E;
+    --ink:#E7ECF2; --ink-2:#B9C3CF; --muted:#8592A2; --line:#2A343F;
+    --accent:#D08379; --accent-soft:#2E1F1D;
+    --win-529:#4FBF95; --win-tax:#6BA6E8;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1318; --surface:#161D25; --surface-2:#1C242E;
+  --ink:#E7ECF2; --ink-2:#B9C3CF; --muted:#8592A2; --line:#2A343F;
+  --accent:#D08379; --accent-soft:#2E1F1D;
+  --win-529:#4FBF95; --win-tax:#6BA6E8;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+header{margin-bottom:32px;border-bottom:1px solid var(--line);padding-bottom:24px}
+h1{
+  font-family:var(--serif); font-weight:600; font-size:clamp(30px,4.4vw,46px);
+  line-height:1.08; letter-spacing:-.015em; margin:0 0 10px; text-wrap:balance;
+}
+.sub{color:var(--ink-2);max-width:62ch;margin:0;font-size:16.5px}
+.eyebrow{
+  font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--accent);font-weight:650;margin:0 0 12px;
+}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:940px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.panel-pad{padding:20px}
+.knobs{position:sticky;top:20px}
+@media(max-width:940px){.knobs{position:static}}
+h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+h3{
+  font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);
+  font-weight:650;margin:22px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line);
+}
+h3:first-of-type{margin-top:6px}
+.knob{margin-bottom:17px}
+.knob-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+.knob label{font-size:13.5px;font-weight:550;color:var(--ink-2)}
+.knob output{
+  font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums;background:var(--surface-2);
+  padding:2px 7px;border-radius:5px;border:1px solid var(--line);
+}
+.knob .why{font-size:12.3px;color:var(--muted);margin:5px 0 0;line-height:1.45}
+input[type=range]{
+  width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
+  background:var(--line);outline:none;margin:3px 0 0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:2.5px solid var(--surface);
+  box-shadow:0 0 0 1px var(--accent);
+}
+input[type=range]::-moz-range-thumb{
+  width:17px;height:17px;border-radius:50%;background:var(--accent);cursor:pointer;
+  border:2.5px solid var(--surface);box-shadow:0 0 0 1px var(--accent);
+}
+input[type=range]:focus-visible{box-shadow:0 0 0 3px var(--accent-soft)}
+.toggle{display:flex;align-items:flex-start;gap:9px;margin-bottom:15px}
+.toggle input{margin:3px 0 0;accent-color:var(--accent);width:15px;height:15px;flex:none}
+.toggle .t-body label{font-size:13.5px;font-weight:550;color:var(--ink-2);cursor:pointer;display:block}
+.toggle .why{font-size:12.3px;color:var(--muted);margin:3px 0 0;line-height:1.45}
+.presets{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.presets button{
+  font:inherit;font-size:12.5px;font-weight:550;padding:6px 11px;border-radius:6px;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);cursor:pointer;
+}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+.presets button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.match-btn{
+  font:inherit;font-size:12px;font-weight:600;margin-top:8px;padding:5px 10px;
+  border-radius:6px;border:1px solid var(--accent);background:transparent;
+  color:var(--accent);cursor:pointer;width:100%;
+}
+.match-btn:hover{background:var(--accent-soft)}
+.match-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{padding:26px 24px;border-bottom:1px solid var(--line)}
+.verdict-label{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:650;margin:0 0 9px}
+.verdict-num{
+  font-family:var(--serif);font-size:clamp(34px,5.6vw,54px);font-weight:600;line-height:1;
+  letter-spacing:-.022em;font-variant-numeric:tabular-nums;margin:0 0 9px;
+}
+.verdict-num.tax{color:var(--win-tax)} .verdict-num.p529{color:var(--win-529)}
+.verdict-txt{margin:0;color:var(--ink-2);font-size:15.5px;max-width:60ch}
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left;font-variant-numeric:normal}
+thead th{
+  font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-weight:650;background:var(--surface-2);
+}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-family:var(--mono);font-size:13.5px}
+.adv-pos{color:var(--win-tax);font-weight:600} .adv-neg{color:var(--win-529);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;background:var(--line)}
+.stat{background:var(--surface);padding:17px 18px}
+.stat-k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650;margin:0 0 6px}
+.stat-v{font-family:var(--mono);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;margin:0;letter-spacing:-.01em}
+.stat-n{font-size:12.3px;color:var(--muted);margin:5px 0 0;line-height:1.4}
+details{border-top:1px solid var(--line)}
+summary{
+  padding:15px 20px;cursor:pointer;font-weight:600;font-size:14.5px;
+  list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);color:var(--muted);font-size:17px}
+details[open] summary::after{content:"−"}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.det-body{padding:0 20px 20px;font-size:14.5px;color:var(--ink-2);max-width:70ch}
+.det-body p{margin:0 0 11px} .det-body p:last-child{margin-bottom:0}
+.det-body code{font-family:var(--mono);font-size:13px;background:var(--surface-2);padding:1.5px 5px;border-radius:4px;border:1px solid var(--line)}
+.det-body strong{color:var(--ink)}
+.flag{
+  background:var(--accent-soft);border-left:3px solid var(--accent);
+  padding:13px 16px;border-radius:0 7px 7px 0;margin:14px 0;font-size:14px;color:var(--ink-2);
+}
+.flag strong{color:var(--accent)}
+footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;max-width:74ch}
+footer p{margin:0 0 8px}
+.stack{display:flex;flex-direction:column;gap:24px}
+.chart-host{position:relative}
+.chart-host svg{display:block;width:100%;height:auto;overflow:visible}
+.gl-grid{stroke:var(--line);stroke-width:1}
+.gl-axis{fill:var(--muted);font-size:11px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.gl-area{fill:var(--accent);opacity:.13}
+.gl-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.gl-dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.gl-hit{fill:transparent;cursor:crosshair}
+.gl-cross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3;opacity:0}
+.gl-tip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  padding:7px 10px;font-size:12.5px;box-shadow:var(--shadow);white-space:nowrap;
+  font-variant-numeric:tabular-nums;transform:translate(-50%,-115%);
+}
+.gl-tip b{font-family:var(--mono);color:var(--accent)}
+@media(prefers-reduced-motion:reduce){.gl-tip{transition:none}}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow"><a href="https://moneywellstudio.com" style="color:inherit;text-decoration:none">Money Well Studio</a> &middot; College Series, Part 2</p>
+  <h1>Should that money go in a 529?</h1>
+  <p class="sub">A 529 shelters investment gains from tax. That is the entire benefit. So the answer turns on two things most people never check before funding one: how much gain there will actually be by the time the tuition bill lands, and how sure you are the money gets spent on school. The 529 below follows a real age-based glide path, so it de-risks as enrollment approaches. The taxable account does not, which is exactly where most comparisons quietly go wrong.</p>
+</header>
+
+<div class="grid">
+
+  <div class="panel knobs">
+    <div class="panel-pad">
+      <h2>Your numbers</h2>
+      <p style="margin:2px 0 16px;color:var(--muted);font-size:13px">Same plan, four start dates. Start from one and turn any knob.</p>
+      <div class="presets">
+        <button type="button" data-preset="pre">Before birth</button>
+        <button type="button" data-preset="birth">At birth</button>
+        <button type="button" data-preset="ten">Age 10</button>
+        <button type="button" data-preset="senior">Senior year</button>
+      </div>
+
+      <h3>The money</h3>
+      <div class="knob">
+        <div class="knob-head"><label for="amount">Amount you put in</label><output id="amount-o"></output></div>
+        <input type="range" id="amount" min="1000" max="400000" step="1000" value="20000">
+        <p class="why" id="amount-note"></p>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="fundage">Child&rsquo;s age when you fund it</label><output id="fundage-o"></output></div>
+        <input type="range" id="fundage" min="-5" max="18" step="1" value="0">
+        <p class="why" id="fundage-note"></p>
+      </div>
+
+      <h3>Growth</h3>
+      <div class="knob">
+        <div class="knob-head"><label for="req">529 return, at full risk</label><output id="req-o"></output></div>
+        <input type="range" id="req" min="1" max="14" step="0.25" value="9">
+        <p class="why" id="req-note"></p>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="rtax">Taxable account return</label><output id="rtax-o"></output></div>
+        <input type="range" id="rtax" min="0" max="14" step="0.25" value="8">
+        <p class="why" id="rtax-note"></p>
+        <button type="button" id="match" class="match-btn">Match my 529&rsquo;s blended rate</button>
+      </div>
+      <div class="toggle">
+        <input type="checkbox" id="glide529" checked>
+        <div class="t-body"><label for="glide529">529 follows an age-based glide path</label>
+        <p class="why">Uncheck to hold the full-risk rate the whole way, which is not how real age-based plans work but is useful for seeing what the glide costs.</p></div>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="fee">529 fee premium</label><output id="fee-o"></output></div>
+        <input type="range" id="fee" min="0" max="0.75" step="0.05" value="0.1">
+        <p class="why">Plan administration on top of fund fees. Small, but it compounds against you for the whole horizon.</p>
+      </div>
+
+      <h3>Certainty</h3>
+      <div class="knob">
+        <div class="knob-head"><label for="qual">Spent on qualified expenses</label><output id="qual-o"></output></div>
+        <input type="range" id="qual" min="0" max="100" step="5" value="100">
+        <p class="why">Tuition, fees, books, equipment, and room and board within limits. <strong>Transportation does not qualify</strong> even when the school counts it in cost of attendance. Anything left over gets taxed on its way out.</p>
+      </div>
+
+      <h3>Tax</h3>
+      <div class="knob">
+        <div class="knob-head"><label for="ltcg">Long-term capital gains rate</label><output id="ltcg-o"></output></div>
+        <input type="range" id="ltcg" min="0" max="20" step="5" value="15">
+        <p class="why">What the taxable account pays on its gains. 0%, 15%, or 20% depending on income.</p>
+      </div>
+      <div class="toggle">
+        <input type="checkbox" id="niit" checked>
+        <div class="t-body"><label for="niit">Add 3.8% net investment income tax</label>
+        <p class="why">Applies above $200k single, $250k married filing jointly.</p></div>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="tlh">Tax-loss harvesting offset</label><output id="tlh-o"></output></div>
+        <input type="range" id="tlh" min="0" max="40" step="5" value="0">
+        <p class="why">Automated harvesting shaves the taxable account's real tax bill. A 529 cannot do this, because there is nothing to harvest inside a shelter.</p>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="ord">Ordinary income rate</label><output id="ord-o"></output></div>
+        <input type="range" id="ord" min="10" max="40" step="1" value="24">
+        <p class="why">Only used on the non-qualified slice, which is taxed as ordinary income plus a penalty.</p>
+      </div>
+      <div class="toggle">
+        <input type="checkbox" id="penalty" checked>
+        <div class="t-body"><label for="penalty">Apply the 10% additional tax</label>
+        <p class="why">Charged on the <em>earnings</em> portion of a non-qualified withdrawal, never on what you put in. Waived on scholarships, disability, and death.</p></div>
+      </div>
+
+      <h3>State benefit</h3>
+      <div class="knob">
+        <div class="knob-head"><label for="strate">State income tax rate</label><output id="strate-o"></output></div>
+        <input type="range" id="strate" min="0" max="10" step="0.25" value="0">
+        <p class="why">Texas, Florida and six others have no income tax, so there is nothing to deduct from. Roughly 30 states do offer a deduction or credit.</p>
+      </div>
+      <div class="knob">
+        <div class="knob-head"><label for="stcap">Deductible per year, cap</label><output id="stcap-o"></output></div>
+        <input type="range" id="stcap" min="0" max="20000" step="500" value="10000">
+        <p class="why">Most states cap what you can deduct. The benefit is the cap times your state rate, not the full contribution.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stack">
+
+    <div class="panel">
+      <div class="verdict">
+        <p class="verdict-label" id="v-label">Advantage</p>
+        <p class="verdict-num" id="v-num">&mdash;</p>
+        <p class="verdict-txt" id="v-txt"></p>
+      </div>
+      <div class="stats">
+        <div class="stat"><p class="stat-k">529, after tax</p><p class="stat-v" id="s-529">&mdash;</p><p class="stat-n" id="s-529n"></p></div>
+        <div class="stat"><p class="stat-k">Taxable, after tax</p><p class="stat-v" id="s-tax">&mdash;</p><p class="stat-n" id="s-taxn"></p></div>
+        <div class="stat"><p class="stat-k">529 blended return</p><p class="stat-v" id="s-cagr">&mdash;</p><p class="stat-n" id="s-cagrn"></p></div>
+        <div class="stat"><p class="stat-k">Breakeven</p><p class="stat-v" id="s-be">&mdash;</p><p class="stat-n">Pre-tax return the taxable account needs to tie</p></div>
+        <div class="stat"><p class="stat-k">Exit cost today</p><p class="stat-v" id="s-exit">&mdash;</p><p class="stat-n" id="s-exitn"></p></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-pad" style="padding-bottom:10px">
+        <h2>The glide path</h2>
+        <p style="margin:2px 0 0;color:var(--muted);font-size:13.5px">Share of the account held in stocks, by year. Vanguard&rsquo;s Target Enrollment allocations, 1 July 2026.</p>
+      </div>
+      <div class="panel-pad" style="padding-top:12px">
+        <div id="chart" class="chart-host"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-pad" style="padding-bottom:4px">
+        <h2>Year by year</h2>
+        <p style="margin:2px 0 14px;color:var(--muted);font-size:13.5px">Both columns are after-tax, assuming you stop and spend at that year.</p>
+      </div>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Year</th><th>529</th><th>Taxable</th><th>Advantage</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-pad"><h2>What the math is doing</h2>
+      <p style="margin:2px 0 0;color:var(--muted);font-size:13.5px">Every assumption, and where each one can mislead you.</p></div>
+
+      <details><summary>The benefit is tax-free growth. Nothing else.</summary>
+        <div class="det-body">
+          <p>Contributions are <strong>not federally deductible</strong>. Not at any income, not in any state. The money going in is already taxed.</p>
+          <p>So the 529's entire value is that gains escape tax on the way out. <strong>No gain, no benefit.</strong> A shelter over an account that did not grow is a shelter over nothing, and you paid a fee premium for it.</p>
+          <div class="flag"><strong>The line worth remembering:</strong> tax optimization is not the same as wealth optimization. Paying zero tax on a small gain can leave you poorer than paying tax on a large one.</div>
+        </div>
+      </details>
+
+      <details><summary>Why the glide path matters, and what it proves</summary>
+        <div class="det-body">
+          <p>Age-based 529 portfolios do not hold one allocation. They start near <strong>95% stocks</strong> and step down to about <strong>12%</strong> by enrollment, so the money rides equity risk in the early years and is protected by the time tuition is due. The schedule here is Vanguard&rsquo;s published Target Enrollment allocation as of 1 July 2026.</p>
+          <p>Over 18 years that glide blends to roughly <strong>6.8% a year</strong> at 9% stocks and 4% bonds. Not the 9% the stock knob says, and not the 4% the bond knob says. The average is dominated by the early years, because that is when the balance compounds longest.</p>
+          <div class="flag"><strong>Here is the part worth sitting with.</strong> Click <em>Match my 529&rsquo;s blended rate</em> so both accounts earn the same thing, and <em>the 529 wins at every horizon.</em> It never flips. Same return, same risk, one of them tax-free &mdash; of course it wins.</div>
+          <p>Now drag the taxable rate back up. It takes surprisingly little &mdash; a point or two &mdash; before the taxable account wins again. But every one of those points is <strong>risk you are choosing to carry right up to the tuition bill</strong>, at the exact moment the 529 is deliberately stepping out of the market.</p>
+          <p>So if your real 529 lost to your real brokerage account, the tax code almost certainly was not the reason. <strong>The brokerage account was taking more risk.</strong></p>
+          <p>That is the trap in the whole 529 debate. People compare a de-risked college fund against an aggressive portfolio, see the gap, and conclude something about tax law. They have measured their own asset allocation.</p>
+        </div>
+      </details>
+
+      <details><summary>The certainty knob is the one people skip</summary>
+        <div class="det-body">
+          <p>On a non-qualified withdrawal, income tax and the 10% additional tax hit <strong>only the earnings</strong>, never the principal. So the penalty scales with how well the account did.</p>
+          <p>This produces the counterintuitive result worth sitting with: <strong>a 529 that performed badly is cheap to walk away from, and one that performed well is expensive.</strong> Success builds the cage. Drag the certainty knob below 100% and watch which direction the advantage moves.</p>
+          <p>Qualified means tuition, mandatory fees, books, supplies, equipment, computers, and room and board within the school's stated allowance. It does <strong>not</strong> mean transportation, even when the school includes travel in its official cost of attendance for financial aid. Same student, same school, two different definitions.</p>
+        </div>
+      </details>
+
+      <details><summary>How much can you actually put in?</summary>
+        <div class="det-body">
+          <p><strong>There is no federal contribution limit on a 529.</strong> Not $150,000, not any number. What exists are three separate things people conflate:</p>
+          <p><strong>1. The annual gift exclusion &mdash; $19,000 per donor, per beneficiary in 2026</strong> ($38,000 for a married couple splitting gifts). Stay under it and there is nothing to file.</p>
+          <p><strong>2. Superfunding, the five-year election.</strong> 529s uniquely let you drop five years of exclusions in at once and elect to treat it as five equal annual gifts: <strong>$95,000 single, $190,000 married</strong> in 2026. It requires filing <strong>Form 709</strong> for that tax year. Miss the form and you have an unreported gift.</p>
+          <p><strong>3. State aggregate maximums &mdash; roughly $235,000 to $675,000</strong> per beneficiary, across all accounts in that state's plan. Once the balance hits the cap, no new contributions. This is the only real ceiling, and it is set by the state, not the IRS.</p>
+          <div class="flag"><strong>Where the $150,000 idea comes from:</strong> five years of gifts for a married couple at the <em>2021</em> exclusion of $15,000 came to exactly $150,000. It was never a contribution cap &mdash; it was that year's front-loading limit, and it has moved every few years since.</div>
+        </div>
+      </details>
+
+      <details><summary>What this model leaves out</summary>
+        <div class="det-body">
+          <p><strong>The Roth rollover.</strong> Since 2024 you can move unused 529 money into the beneficiary's Roth IRA: $35,000 lifetime, account must be at least 15 years old, contributions from the last 5 years excluded, capped annually at the Roth limit, and the beneficiary needs earned income. This is the real answer to "what if my kid doesn't go" and it makes the certainty knob much less scary <em>if you started early enough to clear 15 years</em>.</p>
+          <p><strong>Changing the beneficiary.</strong> You can move the account to a qualifying family member. Worth real money if a sibling is years behind. Worth little if they are two years behind, which only delays the same problem.</p>
+          <p><strong>Financial aid.</strong> A parent-owned 529 counts as a parental asset and is assessed lightly. Not modeled here.</p>
+          
+          <p><strong>Losses are not deductible.</strong> Claiming a loss on a 529 was a miscellaneous itemized deduction subject to the 2% floor, and those have been suspended since 2018.</p>
+        </div>
+      </details>
+
+      <details><summary>The honest verdict</summary>
+        <div class="det-body">
+          <p>Run it yourself. Fund it at birth, certainty at 100%, and click <em>Match my 529&rsquo;s blended rate</em> so neither account is secretly taking more risk. <strong>The 529 wins comfortably.</strong></p>
+          <p>Now drag the funding age to 17. The 529 still wins, but by pocket change, because there was never time to accumulate the gains the shelter exists to protect. You bought a tax shelter, and paid a plan fee for it, to protect almost nothing.</p>
+          <p>Drag it the other way, to a grandparent funding before the child is born, and the advantage compounds for more than two decades. <strong>Same instrument, same tax code. Only the start date moved.</strong></p>
+          <p>Which means the failure mode is not the instrument. It is <strong>funding it late and expecting a deduction that was never there.</strong> Fund early and a 529 is very good. Fund at seventeen and you have bought a tax shelter for a gain that will not arrive.</p>
+        </div>
+      </details>
+    </div>
+
+    <footer>
+      <p>Built for <a href="https://moneywellstudio.com" style="color:var(--accent)">Money Well Studio</a>, the podcast where Jennifer and Julie talk money, for College Series Part 2. Free and open source: <a href="https://github.com/javidjamae/529-calculator" style="color:var(--accent)">view or edit the code on GitHub</a>.</p>
+      <p><strong>This is a model, not tax advice.</strong> It simplifies real tax law in ways that matter above certain income levels, and it ignores state-specific 529 rules that vary a lot. Check your own numbers with someone who files returns for a living.</p>
+      <p>Glide path: Vanguard Target Enrollment Portfolio allocations, 1 July 2026. Other plans differ, sometimes a lot &mdash; check your own. Rules cited: IRS Publication 970 (qualified expenses, earnings versus basis, the additional tax), IRS <em>529 Plans: Questions and Answers</em> (no federal deduction, beneficiary changes), IRS Topic 559 (NIIT thresholds), SECURE 2.0 &sect;126 (Roth rollover).</p>
+    </footer>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  // Vanguard Target Enrollment Portfolio stock allocations, 1 July 2026.
+  // Keyed by YEARS UNTIL ENROLLMENT. Each Vanguard portfolio spans two years,
+  // so pairs share a value. This is a real published schedule, not a curve fit.
+  var GLIDE={18:95,17:94,16:94,15:86,14:86,13:75.5,12:75.5,11:63.5,10:63.5,
+             9:54,8:54,7:44.82,6:44.82,5:29.14,4:29.14,3:20.78,2:20.78,
+             1:16.91,0:11.6};
+  function equityAt(yearsOut){
+    if(yearsOut>18) return 95;
+    if(yearsOut<0) return 11.6;
+    return GLIDE[yearsOut];
+  }
+
+  var ids=["amount","fundage","req","rtax","fee","qual","ltcg","tlh","ord","strate","stcap"];
+  var ENROLL_AGE=18;
+  function horizon(){return Math.max(0,ENROLL_AGE-(+el.fundage.value));}
+  var el={},out={};
+  ids.forEach(function(i){el[i]=document.getElementById(i);out[i]=document.getElementById(i+"-o");});
+  var niit=document.getElementById("niit"), pen=document.getElementById("penalty"),
+      g529=document.getElementById("glide529");
+
+  // The de-risked end of the glide is DERIVED, not a knob. Bonds and cash are
+  // modeled a fixed 5 points below equities, which is roughly the long-run equity
+  // risk premium — so a 9% full-risk 529 tapers toward 4%, and the user sets one
+  // number instead of two.
+  var PREMIUM=5;
+  function floorRate(){return Math.max(1,(+el.req.value)-PREMIUM);}
+
+  var usd=function(n){return "$"+Math.round(n).toLocaleString("en-US");};
+  var usd0=function(n){return (n<0?"-$":"$")+Math.abs(Math.round(n)).toLocaleString("en-US");};
+  var pct=function(n,d){return n.toFixed(d===undefined?2:d)+"%";};
+
+  function ageLabel(a){
+    if(a<0) return Math.abs(a)+(Math.abs(a)==1?" yr":" yrs")+" before birth";
+    if(a===0) return "At birth";
+    return "Age "+a;
+  }
+  function fmtKnob(k,v){
+    if(k==="amount"||k==="stcap") return usd(v);
+    if(k==="fundage") return ageLabel(v);
+    if(k==="qual"||k==="tlh"||k==="ltcg"||k==="ord") return v+"%";
+    return pct(v,2);
+  }
+
+  // Compound year by year. When gliding, the stock share (and so the expected
+  // return) changes every year, which is the whole point: a long horizon earns
+  // near-equity returns in exactly the years compounding matters most.
+  // 529 path: compound year by year against the changing stock share.
+  function grow529(C,N){
+    var v=C, rEq=+el.req.value/100, rB=floorRate()/100, drag=+el.fee.value/100;
+    for(var t=0;t<N;t++){
+      var eq=g529.checked? equityAt(N-t)/100 : 1;
+      v*=1+(eq*rEq+(1-eq)*rB)-drag;
+    }
+    return v;
+  }
+  // Taxable path: one flat rate, as chosen.
+  function growTax(C,N){return C*Math.pow(1+(+el.rtax.value)/100,N);}
+  function blendedCAGR(C,V,N){return N>0?(Math.pow(V/C,1/N)-1)*100:0;}
+
+  function model(n){
+    var C=+el.amount.value,
+        q=+el.qual.value/100,
+        cg=(+el.ltcg.value+(niit.checked?3.8:0))/100*(1-(+el.tlh.value/100)),
+        ordr=+el.ord.value/100+(pen.checked?0.10:0);
+
+    var v5=grow529(C,n),
+        gain5=Math.max(0,v5-C),
+        earnFrac=v5>0?gain5/v5:0,
+        nonQualTax=v5*(1-q)*earnFrac*ordr,
+        stateBenefit=Math.min(C,+el.stcap.value)*(+el.strate.value/100),
+        after5=v5-nonQualTax+stateBenefit;
+
+    var vt=growTax(C,n),
+        aftert=vt-Math.max(0,vt-C)*cg;
+
+    return {a529:after5,atax:aftert,v5:v5,vt:vt,nonQualTax:nonQualTax,
+            state:stateBenefit,gain5:gain5,c:C};
+  }
+
+  // Flat pre-tax return the taxable account would need to tie the 529.
+  function breakeven(n,target){
+    var C=+el.amount.value,
+        cg=(+el.ltcg.value+(niit.checked?3.8:0))/100*(1-(+el.tlh.value/100));
+    if(target<=C||n<=0) return 0;
+    var lo=0,hi=1;
+    for(var i=0;i<80;i++){
+      var m=(lo+hi)/2, v=C*Math.pow(1+m,n), a=v-Math.max(0,v-C)*cg;
+      if(a<target) lo=m; else hi=m;
+    }
+    return (lo+hi)/2*100;
+  }
+
+  // ---- glide path chart: one series, so the title names it and no legend is needed
+  var host=document.getElementById("chart"), tip=null;
+  function drawChart(N){
+    var W=720,H=210,L=38,R=14,T=14,B=28, iw=W-L-R, ih=H-T-B;
+    var pts=[];
+    for(var t=0;t<=N;t++){
+      pts.push({x:t, y:g529.checked?equityAt(N-t):100});
+    }
+    var xs=function(t){return L+(N===0?iw/2:t/N*iw);},
+        ys=function(v){return T+ih-(v/100)*ih;};
+
+    var line=pts.map(function(p,i){return (i?"L":"M")+xs(p.x).toFixed(1)+" "+ys(p.y).toFixed(1);}).join(" ");
+    var area=line+" L"+xs(N).toFixed(1)+" "+(T+ih)+" L"+xs(0).toFixed(1)+" "+(T+ih)+" Z";
+
+    var grid="",lab="";
+    [0,25,50,75,100].forEach(function(v){
+      grid+='<line class="gl-grid" x1="'+L+'" y1="'+ys(v)+'" x2="'+(W-R)+'" y2="'+ys(v)+'"/>';
+      lab+='<text class="gl-axis" x="'+(L-8)+'" y="'+(ys(v)+4)+'" text-anchor="end">'+v+'</text>';
+    });
+    var step=N>10?Math.ceil(N/6):1, xl="";
+    for(var t=0;t<=N;t+=step){
+      xl+='<text class="gl-axis" x="'+xs(t)+'" y="'+(T+ih+18)+'" text-anchor="middle">'+t+'</text>';
+    }
+    var hits="";
+    for(var t=0;t<=N;t++){
+      var half=(N===0?iw/2:iw/N/2);
+      hits+='<rect class="gl-hit" x="'+(xs(t)-half)+'" y="'+T+'" width="'+(half*2)+'" height="'+ih
+           +'" data-t="'+t+'" data-v="'+pts[t].y+'"/>';
+    }
+
+    host.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Stock allocation by year, '
+      +'starting at '+pts[0].y.toFixed(0)+' percent and ending at '+pts[N].y.toFixed(0)+' percent">'
+      +grid+lab+xl
+      +'<path class="gl-area" d="'+area+'"/><path class="gl-line" d="'+line+'"/>'
+      +'<circle class="gl-dot" cx="'+xs(0)+'" cy="'+ys(pts[0].y)+'" r="4"/>'
+      +'<circle class="gl-dot" cx="'+xs(N)+'" cy="'+ys(pts[N].y)+'" r="4"/>'
+      +'<line class="gl-cross" id="gl-cx" x1="0" y1="'+T+'" x2="0" y2="'+(T+ih)+'"/>'
+      +hits
+      +'<text class="gl-axis" x="'+(L-8)+'" y="'+(T-2)+'" text-anchor="end">%</text>'
+      +'<text class="gl-axis" x="'+(W-R)+'" y="'+(T+ih+18)+'" text-anchor="end">years from now</text>'
+      +'</svg><div class="gl-tip" id="gl-tip"></div>';
+
+    tip=document.getElementById("gl-tip");
+    var cx=document.getElementById("gl-cx"), svg=host.querySelector("svg");
+    host.querySelectorAll(".gl-hit").forEach(function(r){
+      r.addEventListener("mouseenter",function(){
+        var t=+r.dataset.t, v=+r.dataset.v, rect=svg.getBoundingClientRect(), hr=host.getBoundingClientRect();
+        var px=xs(t)/W*rect.width+(rect.left-hr.left), py=ys(v)/H*rect.height+(rect.top-hr.top);
+        cx.setAttribute("x1",xs(t)); cx.setAttribute("x2",xs(t)); cx.style.opacity=".6";
+        tip.innerHTML="Year "+t+" &middot; <b>"+v.toFixed(v%1?2:0)+"% stocks</b>";
+        tip.style.left=px+"px"; tip.style.top=py+"px"; tip.style.opacity="1";
+      });
+    });
+    host.addEventListener("mouseleave",function(){if(tip)tip.style.opacity="0";cx.style.opacity="0";});
+  }
+
+  // 2026 figures. There is NO federal cap on 529 contributions; these are the
+  // gift-tax reporting thresholds people mistake for one.
+  // ---- YEARLY FIGURES: update these each tax year (see README) ----
+  var TAX_YEAR=2026;
+  var GIFT_EXCLUSION=19000;        // annual federal gift tax exclusion, per donor per beneficiary
+  var STATE_CAP_RANGE="$235,000 to $675,000"; // typical state aggregate 529 maximums
+  function amountNote(C){
+    var single=GIFT_EXCLUSION, couple=2*GIFT_EXCLUSION, sf=5*GIFT_EXCLUSION, sf2=10*GIFT_EXCLUSION;
+    if(C<=single) return "Under the "+usd(single)+" annual gift exclusion, so nothing to report.";
+    if(C<=couple) return "Over "+usd(single)+", but inside "+usd(couple)+" for a married couple splitting the gift.";
+    if(C<=sf) return "Superfunding: five years of gifts at once. Allowed, but it needs <strong>Form 709</strong>.";
+    if(C<=sf2) return "Superfunding as a married couple, up to "+usd(sf2)+". Needs <strong>Form 709</strong>.";
+    return "Above the "+usd(sf2)+" five-year front-load for a couple. Still legal &mdash; state aggregate caps run "+STATE_CAP_RANGE+" per beneficiary &mdash; but the excess eats into your lifetime gift exemption.";
+  }
+  function ageNote(a,N){
+    if(N===0) return "Funded the year they enroll. Zero time to compound, so there are no gains for the shelter to shelter.";
+    if(a<0) return "A grandparent can open a 529 before the child exists, name themselves beneficiary, and reassign later. "+N+" years of compounding.";
+    if(a===0) return "The best case for a 529: "+N+" years of tax-free growth, starting at roughly 95% stocks.";
+    if(a>=17) return "Only "+N+(N==1?" year":" years")+" left. Almost no gain to protect, and you still pay the plan fee.";
+    return N+" years until enrollment. Tax-free compounding needs time, and this is how much you have.";
+  }
+
+  function render(){
+    ids.forEach(function(k){out[k].textContent=fmtKnob(k,+el[k].value);});
+    document.getElementById("amount-note").innerHTML=amountNote(+el.amount.value);
+    document.getElementById("fundage-note").innerHTML=ageNote(+el.fundage.value,horizon());
+    document.getElementById("req-note").innerHTML=
+      "The rate while the account is still around 95% stocks. It steps down from here on its own as the glide de-risks, "
+      +"bottoming out near <strong>"+pct(floorRate())+"</strong> once it is mostly bonds and cash. You set one number; the schedule does the taper.";
+    document.getElementById("rtax-note").innerHTML=
+      "A single flat rate, since an ordinary brokerage account has no glide unless you build one. "
+      +"Your 529 blends to <strong>"+pct(blendedCAGR(+el.amount.value,grow529(+el.amount.value,horizon()),horizon()))
+      +"</strong> over this horizon &mdash; match it here to compare the wrappers rather than the risk.";
+
+    var N=horizon(), r=model(N), diff=r.atax-r.a529;
+    var vn=document.getElementById("v-num"),
+        vl=document.getElementById("v-label"),
+        vt=document.getElementById("v-txt");
+
+    vn.textContent=usd(Math.abs(diff));
+    if(Math.abs(diff)<1){
+      vn.className="verdict-num"; vl.textContent="Line ball";
+      vt.textContent="These land within a dollar of each other over "+N+(N==1?" year":" years")+". At that point pick on flexibility, not tax.";
+    } else if(diff>0){
+      vn.className="verdict-num tax"; vl.textContent="The taxable account wins by";
+      vt.innerHTML="Over "+N+(N==1?" year":" years")+", ordinary investing leaves you more after tax. Your 529 blends to <strong>"
+        +pct(blendedCAGR(r.c,r.v5,N))+"</strong> across the glide against a flat "+pct(+el.rtax.value)
+        +" taxable. Set them equal to see the wrappers compared without the risk gap.";
+    } else {
+      vn.className="verdict-num p529"; vl.textContent="The 529 wins by";
+      vt.innerHTML="Over "+N+(N==1?" year":" years")+", tax-free compounding more than covers what you give up in flexibility. Your 529 blends to <strong>"
+        +pct(blendedCAGR(r.c,r.v5,N))+"</strong> across the glide against a flat "+pct(+el.rtax.value)+" taxable.";
+    }
+
+    document.getElementById("s-529").textContent=usd(r.a529);
+    document.getElementById("s-529n").textContent=r.state>0
+      ? "Includes "+usd(r.state)+" state tax benefit"
+      : (r.nonQualTax>0?usd(r.nonQualTax)+" lost to non-qualified tax":"No tax due, fully qualified");
+    document.getElementById("s-tax").textContent=usd(r.atax);
+    document.getElementById("s-taxn").textContent=usd(Math.max(0,r.vt-r.c))+" in gains, taxed on exit";
+
+    document.getElementById("s-be").textContent=pct(breakeven(N,r.a529));
+    var exit=r.gain5>0?r.gain5*((+el.ord.value/100)+(pen.checked?0.10:0)):0;
+    document.getElementById("s-exit").textContent=usd(exit);
+    document.getElementById("s-exitn").textContent=r.gain5<=0
+      ? "No earnings, so walking away is free"
+      : "To pull it all out today for something other than school";
+
+    document.getElementById("s-cagr").textContent=pct(blendedCAGR(r.c,r.v5,N));
+    document.getElementById("s-cagrn").textContent=g529.checked
+      ? "Blended 529 return across the glide"
+      : "Held at full risk the whole way";
+
+    var rows="";
+    if(N===0){
+      rows='<tr><td colspan="4" style="text-align:left;color:var(--muted)">'
+        +'Funded the year they enroll, so there is no year to show. Both accounts hold '
+        +usd(r.c)+' and neither has grown.</td></tr>';
+    }
+    for(var y=1;y<=N;y++){
+      var m=model(y), d=m.atax-m.a529;
+      rows+="<tr"+(y==N?' style="background:var(--surface-2)"':'')+">"
+        +"<td>"+y+"</td>"
+        +'<td class="num">'+usd(m.a529)+"</td>"
+        +'<td class="num">'+usd(m.atax)+"</td>"
+        +'<td class="num '+(d>0?"adv-pos":"adv-neg")+'">'+usd0(d)+"</td></tr>";
+    }
+    document.getElementById("tbody").innerHTML=rows;
+
+    drawChart(N);
+  }
+
+  // Same plan, four start dates. Timing is the whole story.
+  var base={req:9,rtax:8,fee:0.1,qual:100,ltcg:15,tlh:0,ord:24,
+            strate:0,stcap:10000,niit:true,penalty:true,g529:true};
+  function P(o){var r={};for(var k in base)r[k]=base[k];for(var k2 in o)r[k2]=o[k2];return r;}
+  var presets={
+    pre:   P({amount:20000, fundage:-3}),
+    birth: P({amount:20000, fundage:0}),
+    ten:   P({amount:40000, fundage:10}),
+    senior:P({amount:100000,fundage:17})
+  };
+  document.querySelectorAll("[data-preset]").forEach(function(b){
+    b.addEventListener("click",function(){
+      var p=presets[b.dataset.preset];
+      ids.forEach(function(k){if(p[k]!==undefined)el[k].value=p[k];});
+      niit.checked=p.niit; pen.checked=p.penalty;
+      g529.checked=p.g529; render();
+    });
+  });
+
+  document.getElementById("match").addEventListener("click",function(){
+    var N=horizon();
+    if(N<=0) return;
+    var b=blendedCAGR(+el.amount.value,grow529(+el.amount.value,N),N);
+    el.rtax.value=(Math.round(b*4)/4).toFixed(2);  // snap to the slider's 0.25 step
+    render();
+  });
+  ids.forEach(function(k){el[k].addEventListener("input",render);});
+  [niit,pen,g529].forEach(function(c){c.addEventListener("change",render);});
+  window.addEventListener("resize",function(){drawChart(horizon());});
+  render();
+})();
+</script>
+
+</body></html>
